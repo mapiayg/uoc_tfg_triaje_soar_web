@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triaje SOAR — Presentación Interactiva</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #73edff; color: #1a1a2e; line-height: 1.6; }
+
+  header { background: #000078; color: white; padding: 2rem; text-align: center; }
+  header h1 { font-size: 1.8rem; font-weight: 600; }
+  header p { opacity: 0.8; margin-top: 0.5rem; }
+
+  .container { width: 85%; margin: 0 auto; padding: 1.5rem; }
+
+  .section { background: white; border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; width: 100%; box-sizing: border-box; }
+  .section h2 { color: #000078; margin-bottom: 1rem; font-size: 1.3rem; border-bottom: 2px solid #73edff; padding-bottom: 0.5rem; }
+
+  .arch-pipeline { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+  .arch-box { background: #000078; color: white; border: 2px solid #000078; border-radius: 8px; padding: 0.8rem 1.5rem; text-align: center; width: 50%; cursor: pointer; transition: all 0.2s; }
+  .arch-split .arch-box { width: 30%; }
+  .arch-box:hover { background: #73edff; color: #000078; border-color: #73edff; transform: scale(1.02); }
+  .arch-box small { display: block; opacity: 0.7; font-size: 0.8rem; }
+  .arch-arrow { color: #000078; font-size: 1.5rem; text-align: center; }
+  .arch-split { display: flex; gap: 1rem; justify-content: center; width: 100%; }
+  .arch-box.active { background: #000078; color: white; border-color: #73edff; }
+
+  .btn-group { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 1rem 0; }
+  .btn { padding: 0.7rem 1.2rem; border: 2px solid #000078; background: white; color: #1a1a2e; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; font-family: inherit; }
+  .btn:hover { background: #000078; color: white; }
+  .btn.vpn { border-color: #c0392b; }
+  .btn.vpn:hover { background: #c0392b; }
+  .btn.resource { border-color: #2980b9; }
+  .btn.resource:hover { background: #2980b9; }
+  .btn.error { border-color: #7f8c8d; }
+  .btn.error:hover { background: #7f8c8d; }
+  .btn.dup { border-color: #f39c12; }
+  .btn.dup:hover { background: #f39c12; }
+
+  .terminal { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; padding: 1rem; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.5; overflow-x: auto; max-height: 500px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; max-width: 100%; }
+  .terminal .prompt { color: #888; }
+  .terminal .info { color: #d4d4d4; }
+  .terminal .warn { color: #dcdcaa; }
+  .terminal .error { color: #f44747; }
+  .terminal .success { color: #4ec9b0; }
+  .terminal .severity-critical { color: #f44747; font-weight: bold; }
+  .terminal .severity-warning { color: #dcdcaa; font-weight: bold; }
+  .terminal .severity-info { color: #569cd6; font-weight: bold; }
+
+  .ticket-display { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
+  .ticket-json, .ticket-txt { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; padding: 1rem; font-family: monospace; font-size: 0.8rem; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+  .ticket-json { border-left: 4px solid #569cd6; }
+  .ticket-txt { border-left: 4px solid #4ec9b0; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 0; width: 100%; }
+  .stat { background: white; border-radius: 8px; padding: 1rem; text-align: center; border: 2px solid #000078; }
+  .stat .number { font-size: 2rem; font-weight: 700; color: #000078; }
+  .stat .label { font-size: 0.85rem; color: #666; }
+
+  .test-results { margin-top: 1rem; }
+  .test-suite { margin: 0.5rem 0; }
+  .test-suite-header { font-weight: 600; padding: 0.5rem; background: #faf6f0; border-radius: 4px; cursor: pointer; }
+  .test-item { padding: 0.3rem 1rem; font-family: monospace; font-size: 0.85rem; }
+  .test-item.pass { color: #27ae60; }
+  .test-item.skip { color: #f39c12; }
+
+  .severity-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+  .severity-table th, .severity-table td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #e8dcc8; }
+  .severity-table th { background: #faf6f0; color: #8b6914; }
+  .severity-table .critical { color: #c0392b; font-weight: 600; }
+  .severity-table .warning { color: #f39c12; font-weight: 600; }
+  .severity-table .info-sev { color: #2980b9; font-weight: 600; }
+
+  .module-desc { background: #e8faff; border: 2px solid #73edff; border-radius: 8px; padding: 1.2rem; margin-top: 1rem; animation: fadeIn 0.3s ease-in; }
+  .module-desc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+  .module-desc-header strong { color: #000078; font-size: 1.1rem; }
+  .module-desc-close { cursor: pointer; color: #999; font-size: 1.2rem; padding: 0.2rem 0.5rem; }
+  .module-desc-close:hover { color: #333; }
+  .module-desc > div:last-child { font-size: 0.9rem; line-height: 1.7; }
+  .module-desc code { background: #d0f0ff; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.85rem; }
+  .module-desc ul { margin: 0.5rem 0 0.5rem 2rem; padding-left: 0.5rem; }
+  .module-desc li { margin: 0.3rem 0; }
+
+  .log-entry { animation: fadeIn 0.3s ease-in; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+
+  @media (max-width: 768px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .ticket-display { grid-template-columns: 1fr; }
+    .arch-split { flex-direction: column; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 style="font-size:1.4rem; font-weight:400; opacity:0.9; margin-bottom:0.3rem;">Trabajo Fin de Grado</h1>
+  <h2 style="font-size:1.8rem; font-weight:700; margin-bottom:1rem;">Diseño e implementación de un sistema SOAR para la automatización del triaje inicial de incidencias de red</h2>
+  <p style="font-size:1rem; margin-bottom:0.3rem;"><strong>Autor:</strong> Miguel Ángel Piay García · mapiayg@uoc.edu</p>
+  <p style="font-size:0.9rem; opacity:0.8; margin-bottom:0.3rem;"><strong>Tutor:</strong> David Prior Rodríguez</p>
+  <p style="font-size:0.85rem; opacity:0.6;">Universitat Oberta de Catalunya (UOC) · Administración de Redes y Sistemas Operativos · Marzo–Junio 2026</p>
+  <p style="font-size:0.8rem; opacity:0.5; margin-top:0.5rem;"><a href="https://github.com/mapiayg/uoc_tfg_triaje_soar" target="_blank" style="color:#73edff;">github.com/mapiayg/uoc_tfg_triaje_soar</a></p>
+</header>
+
+<div class="container">
+
+  <!-- Objetivos y alcance -->
+  <div class="section">
+    <h2>Objetivos y alcance</h2>
+    <p>En un SOC (Security Operations Center), cada alerta de red genera un proceso manual: un técnico recibe la notificación, accede al firewall, ejecuta comandos de diagnóstico, evalúa la gravedad y documenta todo en un ticket. Este proceso consume entre <strong>10 y 15 minutos</strong> por incidencia y no aporta valor analítico — es pura fricción operativa.</p>
+    <p style="margin-top:0.8rem;">Este sistema <strong>SOAR</strong> (Security Orchestration, Automation and Response) automatiza ese proceso completo: un webhook llega desde la plataforma de monitorización (WOCU), el sistema consulta el firewall FortiOS por API REST, diagnostica el problema, clasifica la severidad y genera un ticket listo para el técnico — en menos de <strong>100 milisegundos</strong>.</p>
+    <div style="margin-top:1rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+      <div style="background:#e8faff; border-radius:8px; padding:1rem;">
+        <strong style="color:#000078;">Caso de uso 1: Caída VPN</strong><br>
+        Tipo: <code>vpn_down</code><br>
+        3 consultas API: estado del túnel, configuración phase1, estado de interfaz<br>
+        Severidad: siempre <span style="color:#c0392b; font-weight:600;">CRITICAL</span>
+      </div>
+      <div style="background:#e8faff; border-radius:8px; padding:1rem;">
+        <strong style="color:#000078;">Caso de uso 2: Saturación de recursos</strong><br>
+        Tipo: <code>resource_saturation</code><br>
+        3 consultas API: CPU/memoria, sesiones activas, interfaces<br>
+        Severidad: <span style="color:#c0392b; font-weight:600;">CRITICAL</span> / <span style="color:#f39c12; font-weight:600;">WARNING</span> / <span style="color:#2980b9; font-weight:600;">INFO</span> según umbrales
+      </div>
+    </div>
+    <p style="margin-top:1rem; font-size:0.9rem; color:#555;">El sistema no ejecuta acciones correctivas — su función es exclusivamente diagnóstica. Entrega al técnico un ticket completado con los datos de diagnóstico, liberando su tiempo para el análisis y la toma de decisiones.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="section">
+    <div class="stats">
+      <div class="stat"><div class="number">22</div><div class="label">Módulos Python</div></div>
+      <div class="stat"><div class="number">48</div><div class="label">Tests</div></div>
+      <div class="stat"><div class="number">2</div><div class="label">Casos de uso</div></div>
+      <div class="stat"><div class="number">&lt;100ms</div><div class="label">Tiempo de triaje</div></div>
+    </div>
+  </div>
+
+  <!-- Arquitectura -->
+  <div class="section">
+    <h2>Arquitectura del Pipeline</h2>
+    <div class="arch-pipeline" id="pipeline">
+      <div class="arch-box" id="arch-wocu">WOCU (alerta)<small>HTTP POST /webhook</small></div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-box" id="arch-listener">Listener + Idempotencia<small>listener.py · idempotency.py</small></div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-box" id="arch-parser">Parser / Validación<small>parser.py</small></div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-box" id="arch-router">Router / Dispatcher<small>router.py</small></div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-split">
+        <div class="arch-box" id="arch-vpn">VPN Diag<small>vpn.py · 3 consultas API</small></div>
+        <div class="arch-box" id="arch-resource">Resource Diag<small>resources.py · 3 consultas API</small></div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-box" id="arch-severity">Clasificador de Severidad<small>severity.py</small></div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-box" id="arch-output">Generador de Tickets<small>output.py · JSON + TXT</small></div>
+    </div>
+  </div>
+
+  <!-- Simulación -->
+  <div class="section">
+    <h2>Simulación Interactiva</h2>
+    <p>Simula el comportamiento del sistema: envío de alertas, gestión de errores y ejecución de tests.</p>
+    <div class="btn-group">
+      <button class="btn vpn" onclick="simulate('vpn')">Enviar alerta VPN</button>
+      <button class="btn resource" onclick="simulate('resource')">Enviar alerta Saturación</button>
+      <button class="btn dup" onclick="simulate('duplicate')">Enviar duplicado</button>
+      <button class="btn error" onclick="simulate('error_field')">Webhook sin campos</button>
+      <button class="btn error" onclick="simulate('error_type')">Tipo no soportado</button>
+      <button class="btn" style="border-color:#27ae60;" onclick="runTests('all')">Ejecutar 48 tests (VM activa)</button>
+      <button class="btn" style="border-color:#f39c12;" onclick="runTests('no_vm')">Ejecutar tests (sin VM)</button>
+      <button class="btn" onclick="clearTerminal()">Limpiar</button>
+    </div>
+    <div class="terminal" id="terminal"></div>
+  </div>
+
+  <!-- Ticket -->
+  <div class="section" id="ticket-section" style="display:none;">
+    <h2>Último Ticket Generado</h2>
+    <div class="ticket-display">
+      <div>
+        <strong style="color:#569cd6;">JSON (para ServiceNow)</strong>
+        <div class="ticket-json" id="ticket-json"></div>
+      </div>
+      <div>
+        <strong style="color:#4ec9b0;">TXT (para el técnico)</strong>
+        <div class="ticket-txt" id="ticket-txt"></div>
+      </div>
+    </div>
+  </div>
+
+
+<script>
+const terminal = document.getElementById('terminal');
+let processedIds = new Set();
+let ticketCount = 0;
+
+const moduleDescriptions = {
+  'arch-wocu': {
+    title: 'WOCU — Origen de las alertas — simulate_webhook.py · tests/fixtures/',
+    body: `WOCU es la plataforma de monitorización utilizada por Telefónica Tech. Cuando detecta una condición de alerta (túnel VPN caído, CPU al límite), envía un webhook HTTP POST al endpoint <code>/webhook</code> del sistema con un payload JSON que contiene:<ul><li><code>incident_id</code> — identificador único del incidente</li><li><code>alert_type</code> — tipo de alerta (<code>vpn_down</code> o <code>resource_saturation</code>)</li><li><code>device_ip</code>, <code>device_hostname</code>, <code>customer_id</code> — identificación del equipo</li><li>Campos específicos por tipo: <code>vpn_tunnel_name</code> (VPN) o <code>resource_type</code> + <code>threshold_value</code> (saturación)</li></ul>En el laboratorio, los webhooks se simulan con <code>simulate_webhook.py</code> y payloads predefinidos en <code>tests/fixtures/</code>.<br><br><em>Nota: WOCU no forma parte del código del sistema — es el origen externo de las alertas.</em>`
+  },
+  'arch-listener': {
+    title: 'Listener + Idempotencia — src/listener.py · src/idempotency.py',
+    body: `El listener Flask es el único punto de contacto con el exterior. Expone <code>POST /webhook</code> y <code>GET /health</code>.<br><br>El flujo de cada webhook sigue un orden de coste creciente:<ul><li>Verificación HMAC (opcional, configurable)</li><li>Validación de estructura (parser)</li><li>Deduplicación por <code>incident_id</code></li><li>Enrutado al módulo de diagnóstico</li></ul>Respuestas posibles:<br>• HTTP 202 — webhook procesado correctamente<br>• HTTP 200 — duplicado ignorado<br>• HTTP 400 — error de validación<br><br>La idempotencia usa un diccionario en memoria con TTL de 1 hora y <code>threading.Lock</code> para garantizar atomicidad. Si WOCU reenvía el mismo webhook, el sistema lo descarta en menos de 1ms, antes de ejecutar ninguna consulta API.`
+  },
+  'arch-parser': {
+    title: 'Parser / Validación — src/parser.py',
+    body: `Valida que el webhook contiene todos los campos obligatorios (<code>alert_type</code>, <code>device_ip</code>, <code>device_hostname</code>, <code>customer_id</code>, <code>timestamp</code>) usando diferencia de conjuntos.<br><br>Si falta algún campo, devuelve HTTP 400 con mensaje exacto indicando cuáles faltan.<br>Si el <code>alert_type</code> no es válido, lo rechaza indicando los tipos aceptados.<br><br>Genera automáticamente un <code>incident_id</code> si el webhook no lo incluye.<br><br>Propaga campos específicos de cada tipo de alerta (<code>vpn_tunnel_name</code>, <code>resource_type</code>, <code>threshold_value</code>) al dict principal para que los módulos de diagnóstico puedan acceder a ellos directamente.`
+  },
+  'arch-router': {
+    title: 'Router / Dispatcher — src/router.py',
+    body: `Orquesta el pipeline completo con una tabla de despacho:<br><code>{'vpn_down': VPNDiagnostic, 'resource_saturation': ResourceDiagnostic}</code><br><br>Su función <code>route_alert()</code> ejecuta en orden:<br>selección del módulo → diagnóstico → clasificación de severidad → generación del ticket.<br><br>Si el tipo de alerta no está en la tabla, lanza <code>ValueError</code> con mensaje descriptivo.<br><br>Añadir un nuevo caso de uso requiere sólo una línea nueva en el diccionario — el router nunca necesita cambiar.`
+  },
+  'arch-vpn': {
+    title: 'Diagnóstico VPN — src/diagnostics/vpn.py',
+    body: `Automatiza lo que un técnico de N1 haría manualmente ante una caída de VPN.<br><br>Recibe el cliente HTTP (<code>FortinetClient</code>) como parámetro (inyección de dependencias) y ejecuta 3 consultas independientes a la API de FortiOS:<ul><li><code>/monitor/vpn/ipsec</code> — ¿qué ha pasado? (estado del túnel)</li><li><code>/cmdb/vpn.ipsec/phase1-interface</code> — ¿cómo estaba configurado?</li><li><code>/monitor/system/interface</code> — ¿el problema es de red subyacente?</li></ul>Cada consulta está envuelta en su propio <code>try/except</code>: si una falla, las demás continúan y el error queda registrado en el campo <code>errors</code> del resultado.<br><br>El método <code>_analyze()</code> genera un resumen textual a partir de los datos obtenidos.<br>Tiempo típico: 46–62ms para las 3 consultas.`
+  },
+  'arch-resource': {
+    title: 'Diagnóstico Saturación — src/diagnostics/resources.py',
+    body: `Automatiza el diagnóstico de saturación de CPU/memoria.<br><br>Ejecuta 3 consultas a la API:<ul><li><code>/monitor/system/resource/usage</code> — consumo actual de CPU y memoria</li><li><code>/monitor/firewall/session</code> — sesiones activas (indicador de carga)</li><li><code>/monitor/system/interface</code> — estado de interfaces de red</li></ul>Misma arquitectura que el módulo VPN: inyección de dependencias, tolerancia a fallos parciales, resumen textual con valores reales.<br><br><em>Nota: en la VM de evaluación, el endpoint de sesiones devuelve HTTP 424 (Failed Dependency) — el sistema lo gestiona correctamente y genera el ticket con los datos disponibles.</em>`
+  },
+  'arch-severity': {
+    title: 'Clasificador de Severidad — src/severity.py',
+    body: `Asigna <code>critical</code>, <code>warning</code> o <code>info</code> con reglas deterministas y auditables:<ul><li><strong>VPN:</strong> siempre CRITICAL (pérdida de conectividad entre sedes)</li><li><strong>CPU:</strong> ≥90% → CRITICAL · 70–89% → WARNING · &lt;70% → INFO</li><li><strong>Memoria:</strong> ≥95% → CRITICAL · 80–94% → WARNING · &lt;80% → INFO</li></ul>Mismo input → mismo output, siempre.<br><br>El enum <code>Severity(str, Enum)</code> hereda de <code>str</code>, lo que permite comparación directa con strings y serialización a JSON sin conversión.`
+  },
+  'arch-output': {
+    title: 'Generador de Tickets — src/output.py',
+    body: `Genera dos ficheros por incidente en <code>output/</code>:<ul><li><strong>JSON</strong> — compatible con ServiceNow, incluye <code>incident_id</code>, <code>severity</code>, <code>device</code>, <code>diagnostic_summary</code>, <code>raw_data</code> (respuestas completas de la API), <code>recommended_action</code>, <code>processing_time_ms</code> y <code>errors</code></li><li><strong>TXT</strong> — lectura rápida para el técnico de guardia</li></ul>La acción recomendada se selecciona de un diccionario estático por tipo de alerta.<br><br>Todo el proceso queda registrado en <code>logs/soar.log</code> con formato JSON y el <code>incident_id</code> como correlation ID, lo que permite reconstruir la trazabilidad completa de cualquier incidente.`
+  }
+};
+
+document.querySelectorAll('.arch-box').forEach(box => {
+  box.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const id = box.id;
+    const desc = moduleDescriptions[id];
+    if (!desc) return;
+
+    // Cerrar panel anterior si existe
+    const existing = document.querySelector('.module-desc');
+    if (existing) existing.remove();
+
+    // Crear panel
+    const panel = document.createElement('div');
+    panel.className = 'module-desc';
+    panel.innerHTML = `
+      <div class="module-desc-header">
+        <strong>${desc.title}</strong>
+        <span class="module-desc-close" onclick="this.closest('.module-desc').remove()">✕</span>
+      </div>
+      <div>${desc.body}</div>
+    `;
+
+    // Insertar justo después del módulo (o después de su contenedor si está en arch-split)
+    const parent = box.parentElement;
+    if (parent.classList.contains('arch-split')) {
+      parent.after(panel);
+    } else {
+      box.after(panel);
+    }
+  });
+});
+
+function log(text, cls='') {
+  const line = document.createElement('div');
+  line.className = 'log-entry';
+  line.innerHTML = cls ? `<span class="${cls}">${text}</span>` : text;
+  terminal.appendChild(line);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function highlightPipeline(ids) {
+  document.querySelectorAll('.arch-box').forEach(b => b.classList.remove('active'));
+  ids.forEach(id => { const el = document.getElementById(id); if(el) el.classList.add('active'); });
+}
+
+async function simulate(type) {
+  const ts = new Date().toISOString();
+
+  if (type === 'vpn') {
+    const iid = 'INC-20260315-VPN001';
+    log(`\n$ python simulate_webhook.py vpn`, 'prompt');
+    log(`  Enviando: Caída de túnel VPN`);
+    log(`  Fixture:  tests/fixtures/webhook_vpn.json`);
+    log(`  Tipo:     vpn_down`);
+    log(`  ID:       ${iid}`);
+    await delay(200);
+
+    if (processedIds.has(iid)) {
+      log(`\n  [listener] Webhook recibido — ${iid}`, 'info');
+      log(`  [idempotency] incident_id ya registrado en caché (TTL 1h)`, 'warn');
+      log(`  [listener] Webhook duplicado ignorado`, 'warn');
+      log(`\n  Status:   200`, 'warn');
+      log(`  Response: {"status": "duplicate_ignored", "incident_id": "${iid}"}`, 'warn');
+      return;
+    }
+    processedIds.add(iid);
+
+    log(`\n  [listener] Webhook recibido — ${iid}`, 'info');
+    await delay(150);
+    log(`  [parser] Validando campos obligatorios: alert_type, device_ip, device_hostname, customer_id, timestamp`, 'info');
+    log(`  [parser] alert_type "vpn_down" válido`, 'info');
+    log(`  [parser] vpn_tunnel_name propagado: VPN-SEDE-CENTRAL-MADRID`, 'info');
+    await delay(150);
+    log(`  [idempotency] incident_id nuevo — registrado en caché`, 'info');
+    await delay(150);
+    log(`  [router] Tipo vpn_down → módulo VPNDiagnostic seleccionado`, 'info');
+    await delay(200);
+    log(`\n  [vpn] Iniciando diagnóstico VPN para túnel: VPN-SEDE-CENTRAL-MADRID`, 'info');
+    log(`  [client] GET /api/v2/monitor/vpn/ipsec → 200 OK`, 'success');
+    await delay(150);
+    log(`  [client] GET /api/v2/cmdb/vpn.ipsec/phase1-interface?filter=name=@VPN-SEDE-CENTRAL-MADRID → 200 OK`, 'success');
+    await delay(150);
+    log(`  [client] GET /api/v2/monitor/system/interface → 200 OK`, 'success');
+    await delay(200);
+    log(`  [vpn] Túnel VPN-SEDE-CENTRAL-MADRID NO encontrado en lista de túneles activos`, 'warn');
+    log(`  [vpn] Diagnóstico completado en 62ms. Errores: 0`, 'info');
+    await delay(150);
+    log(`\n  [severity] vpn_down → CRITICAL (caída de VPN siempre es crítica)`, 'severity-critical');
+    await delay(150);
+    log(`\n  [output] Generando ticket JSON: output/${iid}.json`, 'info');
+    log(`  [output] Generando ticket TXT:  output/${iid}.txt`, 'info');
+    log(`  [output] Acción recomendada: Verificar conectividad con peer remoto`, 'info');
+    await delay(150);
+    log(`\n  Status:   202`, 'success');
+    log(`  Response: {"incident_id": "${iid}", "status": "processed"}`, 'success');
+    ticketCount++;
+    showTicket('vpn', iid, ts);
+
+  } else if (type === 'resource') {
+    const iid = 'INC-20260315-CPU002';
+    log(`\n$ python simulate_webhook.py resource`, 'prompt');
+    log(`  Enviando: Saturación de recursos`);
+    log(`  Fixture:  tests/fixtures/webhook_resource.json`);
+    log(`  Tipo:     resource_saturation`);
+    log(`  ID:       ${iid}`);
+    await delay(200);
+
+    if (processedIds.has(iid)) {
+      log(`\n  [listener] Webhook recibido — ${iid}`, 'info');
+      log(`  [idempotency] incident_id ya registrado en caché (TTL 1h)`, 'warn');
+      log(`  [listener] Webhook duplicado ignorado`, 'warn');
+      log(`\n  Status:   200`, 'warn');
+      return;
+    }
+    processedIds.add(iid);
+
+    log(`\n  [listener] Webhook recibido — ${iid}`, 'info');
+    await delay(150);
+    log(`  [parser] Validando campos obligatorios... OK`, 'info');
+    log(`  [parser] alert_type "resource_saturation" válido`, 'info');
+    log(`  [parser] resource_type propagado: cpu | threshold_value propagado: 95.5`, 'info');
+    await delay(150);
+    log(`  [idempotency] incident_id nuevo — registrado en caché`, 'info');
+    await delay(150);
+    log(`  [router] Tipo resource_saturation → módulo ResourceDiagnostic seleccionado`, 'info');
+    await delay(200);
+    log(`\n  [resource] Iniciando diagnóstico de saturación: cpu al 95.5%`, 'info');
+    log(`  [client] GET /api/v2/monitor/system/resource/usage → 200 OK`, 'success');
+    log(`  [resource] CPU actual: 1% | Memoria actual: 37%`, 'info');
+    await delay(150);
+    log(`  [client] GET /api/v2/monitor/firewall/session → 424 Failed Dependency`, 'error');
+    log(`  [resource] Error capturado — continuando con las demás consultas`, 'warn');
+    await delay(150);
+    log(`  [client] GET /api/v2/monitor/system/interface → 200 OK`, 'success');
+    await delay(200);
+    log(`  [resource] Diagnóstico completado en 46ms. Errores: 1`, 'info');
+    await delay(150);
+    log(`\n  [severity] resource_saturation cpu 95.5% (≥90%) → CRITICAL`, 'severity-critical');
+    await delay(150);
+    log(`\n  [output] Generando ticket JSON: output/${iid}.json`, 'info');
+    log(`  [output] Generando ticket TXT:  output/${iid}.txt`, 'info');
+    log(`  [output] Acción recomendada: Monitorizar tendencia de consumo`, 'info');
+    log(`  [output] Errores incluidos en el ticket: session_count: 424 Failed Dependency`, 'warn');
+    await delay(150);
+    log(`\n  Status:   202`, 'success');
+    log(`  Response: {"incident_id": "${iid}", "status": "processed"}`, 'success');
+    ticketCount++;
+    showTicket('resource', iid, ts);
+
+  } else if (type === 'duplicate') {
+    const iid = 'INC-20260315-VPN001';
+    log(`\n$ python simulate_webhook.py vpn`, 'prompt');
+    log(`  Enviando: Caída de túnel VPN (mismo incident_id que antes)`);
+    log(`  ID:       ${iid}`);
+    await delay(200);
+    if (processedIds.has(iid)) {
+      log(`\n  [listener] Webhook recibido — ${iid}`, 'info');
+      log(`  [parser] Validación OK`, 'info');
+      log(`  [idempotency] incident_id ${iid} ya registrado hace < 1 hora`, 'warn');
+      log(`  [idempotency] Descartado en < 1ms (sin consultas API)`, 'warn');
+      log(`  [listener] Webhook duplicado ignorado`, 'warn');
+      log(`\n  Status:   200`, 'warn');
+      log(`  Response: {"status": "duplicate_ignored", "incident_id": "${iid}"}`, 'warn');
+    } else {
+      log(`\n  [info] No hay duplicado previo — envía primero una alerta VPN`, 'info');
+    }
+
+  } else if (type === 'error_field') {
+    log(`\n$ curl -X POST http://localhost:5000/webhook \\`, 'prompt');
+    log(`       -H "Content-Type: application/json" \\`, 'prompt');
+    log(`       -d '{"alert_type":"vpn_down","device_ip":"10.0.0.1"}'`, 'prompt');
+    await delay(200);
+    log(`\n  [listener] Webhook recibido`, 'info');
+    log(`  [parser] Verificando campos obligatorios...`, 'info');
+    log(`  [parser] Campos faltantes: customer_id, device_hostname, timestamp`, 'error');
+    log(`  [listener] Webhook rechazado — no se ejecuta ninguna consulta API`, 'error');
+    log(`\n  Status: 400`, 'error');
+    log(`  {"error": "Campos obligatorios ausentes: ['customer_id', 'device_hostname', 'timestamp']"}`, 'error');
+
+  } else if (type === 'error_type') {
+    log(`\n$ curl -X POST http://localhost:5000/webhook \\`, 'prompt');
+    log(`       -H "Content-Type: application/json" \\`, 'prompt');
+    log(`       -d '{"alert_type":"tipo_desconocido","device_ip":"10.0.0.1",...}'`, 'prompt');
+    await delay(200);
+    log(`\n  [listener] Webhook recibido`, 'info');
+    log(`  [parser] Verificando campos obligatorios... OK`, 'info');
+    log(`  [parser] alert_type "tipo_desconocido" no está en tipos válidos`, 'error');
+    log(`  [parser] Tipos aceptados: vpn_down, resource_saturation`, 'error');
+    log(`  [listener] Webhook rechazado`, 'error');
+    log(`\n  Status: 400`, 'error');
+    log(`  {"error": "alert_type inválido: \\"tipo_desconocido\\". Valores válidos: ['resource_saturation', 'vpn_down']"}`, 'error');
+  }
+}
+
+function showTicket(type, iid, ts) {
+  document.getElementById('ticket-section').style.display = 'block';
+
+  if (type === 'vpn') {
+    document.getElementById('ticket-json').textContent = JSON.stringify({
+      incident_id: iid, timestamp: ts, alert_type: "vpn_down", severity: "critical",
+      device: { hostname: "FW-CLIENTE-A-01", ip: "10.10.1.1", customer_id: "CLIENTE-A" },
+      diagnostic_summary: "Túnel VPN-SEDE-CENTRAL-MADRID NO encontrado en lista de túneles activos. El túnel ha caído completamente.",
+      recommended_action: "Verificar conectividad con peer remoto. Revisar logs IKE en ambos extremos.",
+      processing_time_ms: 62, errors: []
+    }, null, 2);
+    document.getElementById('ticket-txt').textContent =
+`============================================================
+TICKET DE INCIDENCIA SOAR
+============================================================
+ID:          ${iid}
+Fecha:       ${ts}
+Tipo:        VPN_DOWN
+Severidad:   CRITICAL
+Dispositivo: FW-CLIENTE-A-01 (10.10.1.1)
+Cliente:     CLIENTE-A
+------------------------------------------------------------
+DIAGNÓSTICO:
+Túnel VPN-SEDE-CENTRAL-MADRID NO encontrado en lista
+de túneles activos. El túnel ha caído completamente.
+------------------------------------------------------------
+ACCIÓN RECOMENDADA:
+Verificar conectividad con peer remoto. Revisar logs
+IKE en ambos extremos.
+------------------------------------------------------------
+Tiempo de procesado: 62 ms
+============================================================`;
+  } else {
+    document.getElementById('ticket-json').textContent = JSON.stringify({
+      incident_id: iid, timestamp: ts, alert_type: "resource_saturation", severity: "critical",
+      device: { hostname: "FW-CLIENTE-B-01", ip: "10.10.2.1", customer_id: "CLIENTE-B" },
+      diagnostic_summary: "CPU actual: 1% | Memoria actual: 37% | Alerta original: cpu al 95.5%.",
+      recommended_action: "Monitorizar tendencia de consumo. Identificar procesos o tráfico anómalo.",
+      processing_time_ms: 46, errors: ["session_count: 424 Client Error: Failed Dependency"]
+    }, null, 2);
+    document.getElementById('ticket-txt').textContent =
+`============================================================
+TICKET DE INCIDENCIA SOAR
+============================================================
+ID:          ${iid}
+Fecha:       ${ts}
+Tipo:        RESOURCE_SATURATION
+Severidad:   CRITICAL
+Dispositivo: FW-CLIENTE-B-01 (10.10.2.1)
+Cliente:     CLIENTE-B
+------------------------------------------------------------
+DIAGNÓSTICO:
+CPU actual: 1% | Memoria actual: 37%
+Alerta original: cpu al 95.5%.
+------------------------------------------------------------
+ACCIÓN RECOMENDADA:
+Monitorizar tendencia de consumo. Identificar procesos
+o tráfico anómalo.
+------------------------------------------------------------
+ERRORES:
+  - session_count: 424 Failed Dependency
+------------------------------------------------------------
+Tiempo de procesado: 46 ms
+============================================================`;
+  }
+}
+
+function clearTerminal() {
+  terminal.innerHTML = '';
+  processedIds.clear();
+  ticketCount = 0;
+  document.getElementById('ticket-section').style.display = 'none';
+  highlightPipeline([]);
+}
+
+const testData = {
+  parser: [
+    ['test_vpn_payload_parsed_correctly', 'Payload VPN se parsea correctamente'],
+    ['test_resource_payload_parsed_correctly', 'Payload saturación se parsea correctamente'],
+    ['test_raw_webhook_preserved', 'El payload original se preserva en raw_webhook'],
+    ['test_incident_id_generated_when_missing', 'Se genera incident_id si no viene en el webhook'],
+    ['test_extra_fields_in_raw_webhook', 'Campos extra (vpn_tunnel_name) accesibles en raw_webhook'],
+    ['test_none_payload_raises_value_error', 'Payload None lanza ValueError'],
+    ['test_empty_dict_raises_value_error', 'Diccionario vacío lanza ValueError'],
+    ['test_missing_alert_type_raises_value_error', 'Campo alert_type faltante detectado'],
+    ['test_missing_device_ip_raises_value_error', 'Campo device_ip faltante detectado'],
+    ['test_missing_customer_id_raises_value_error', 'Campo customer_id faltante detectado'],
+    ['test_invalid_alert_type_raises_value_error', 'Tipo de alerta inválido rechazado'],
+    ['test_empty_alert_type_raises_value_error', 'Tipo de alerta vacío rechazado'],
+    ['test_incident_id_format', 'Formato INC-YYYYMMDD-XXXXXXXX correcto'],
+    ['test_incident_ids_are_unique', 'Dos IDs consecutivos son diferentes'],
+  ],
+  severity: [
+    ['test_vpn_always_critical', 'VPN down siempre es CRITICAL'],
+    ['test_severity_is_string', 'Severity hereda de str — comparación directa con "critical"'],
+    ['test_cpu_critical_at_90', 'CPU ≥90% → CRITICAL'],
+    ['test_cpu_warning_at_75', 'CPU 75% → WARNING'],
+    ['test_cpu_info_at_50', 'CPU 50% → INFO'],
+    ['test_mem_critical_at_95', 'Memoria ≥95% → CRITICAL'],
+    ['test_mem_warning_at_85', 'Memoria 85% → WARNING'],
+    ['test_mem_info_at_60', 'Memoria 60% → INFO'],
+    ['test_unknown_alert_type', 'Tipo desconocido → INFO (no escalar)'],
+    ['test_unknown_resource_type', 'Recurso desconocido → WARNING (precaución)'],
+  ],
+  vpn: [
+    ['test_result_structure', 'Resultado contiene todos los campos requeridos'],
+    ['test_diagnostic_type', 'diagnostic_type es vpn_down'],
+    ['test_tunnel_name_in_result', 'Nombre del túnel coincide con el alert'],
+    ['test_diagnostic_summary_not_empty', 'Resumen diagnóstico no vacío'],
+    ['test_processing_time_captured', 'Tiempo de procesamiento capturado en ms'],
+    ['test_diagnostic_completes', 'Diagnóstico completa sin excepción (tolera errores API)'],
+    ['test_raw_data_keys_present', 'raw_data contiene ipsec_tunnels e interfaces'],
+  ],
+  resource: [
+    ['test_result_structure', 'Resultado contiene todos los campos requeridos'],
+    ['test_diagnostic_type', 'diagnostic_type es resource_saturation'],
+    ['test_resource_type_in_result', 'resource_type coincide con el alert (cpu/mem)'],
+    ['test_diagnostic_summary_not_empty', 'Resumen con valores reales de CPU y memoria'],
+    ['test_processing_time_captured', 'Tiempo de procesamiento capturado en ms'],
+    ['test_diagnostic_completes', 'Diagnóstico completa sin excepción (tolera error 424)'],
+    ['test_raw_data_keys_present', 'raw_data contiene resource_usage, session_count, interfaces'],
+  ],
+  router: [
+    ['test_ticket_structure', 'Ticket VPN contiene todos los campos del esquema'],
+    ['test_vpn_severity_is_critical', 'Pipeline VPN → severidad CRITICAL'],
+    ['test_incident_id_propagated', 'incident_id del webhook aparece en el ticket'],
+    ['test_device_info', 'Hostname e IP del dispositivo en el ticket'],
+    ['test_json_file_created', 'Fichero INC-*.json generado en output/'],
+    ['test_txt_file_created', 'Fichero INC-*.txt generado en output/'],
+    ['test_resource_ticket_structure', 'Ticket saturación contiene todos los campos'],
+    ['test_resource_severity_is_critical', 'Pipeline saturación CPU 95% → CRITICAL'],
+    ['test_resource_alert_type', 'alert_type resource_saturation en el ticket'],
+    ['test_unsupported_alert_type_raises', 'Tipo no soportado lanza ValueError'],
+  ]
+};
+
+function suiteName(suite) {
+  if (suite === 'vpn') return 'test_vpn_module';
+  if (suite === 'resource') return 'test_resource_module';
+  return 'test_' + suite;
+}
+
+const suiteLabels = {
+  parser: 'Tests del parser (unitarios — no requieren VM)',
+  severity: 'Tests del clasificador de severidad (unitarios — no requieren VM)',
+  vpn: 'Tests del módulo VPN (integración — requieren VM)',
+  resource: 'Tests del módulo saturación (integración — requieren VM)',
+  router: 'Tests del pipeline completo (integración — requieren VM)',
+};
+
+async function runTests(mode) {
+  log(`\n$ pytest tests/ -v`, 'prompt');
+  log(`collected 48 items\n`);
+
+  let passed = 0, skipped = 0, num = 0;
+  const vmTests = ['vpn', 'resource', 'router'];
+
+  for (const [suite, tests] of Object.entries(testData)) {
+    log(`\n  --- ${suiteLabels[suite]} ---`, 'info');
+    await delay(100);
+    for (const [testName, desc] of tests) {
+      num++;
+      await delay(50);
+      const file = `tests/${suiteName(suite)}.py`;
+      const needsVm = vmTests.includes(suite);
+      const label = `  #${String(num).padStart(2,'0')} ${desc}`;
+      if (needsVm && mode === 'no_vm') {
+        log(`${label}`, 'warn');
+        log(`       ${file}::${testName} SKIPPED`, 'warn');
+        skipped++;
+      } else {
+        log(`${label}`, 'info');
+        log(`       ${file}::${testName} PASSED`, 'success');
+        passed++;
+      }
+    }
+  }
+
+  log('\n  ════════════════════════════════════════');
+  if (skipped > 0) {
+    log(`  ${passed} passed, ${skipped} skipped in 0.85s`, 'warn');
+  } else {
+    log(`  ${passed} passed in 1.14s`, 'success');
+  }
+  log('  ════════════════════════════════════════');
+}
+</script>
+
+  <!-- Detalles técnicos -->
+  <div class="section">
+    <h2>Detalles técnicos y puesta en marcha</h2>
+    <div style="font-size:0.9rem;">
+
+      <strong style="color:#000078;">Entorno de laboratorio</strong>
+      <table style="width:100%; margin-top:0.5rem; border-collapse:collapse;">
+        <tr><td style="padding:0.3rem 0; border-bottom:1px solid #e0e0e0;">FortiOS VM</td><td style="padding:0.3rem 0; border-bottom:1px solid #e0e0e0;">v7.4.11 · IP 192.168.75.2</td></tr>
+        <tr><td style="padding:0.3rem 0; border-bottom:1px solid #e0e0e0;">VMware Workstation Pro</td><td style="padding:0.3rem 0; border-bottom:1px solid #e0e0e0;">25.0.1 · Red NAT 192.168.75.0/24</td></tr>
+        <tr><td style="padding:0.3rem 0; border-bottom:1px solid #e0e0e0;">Python</td><td style="padding:0.3rem 0; border-bottom:1px solid #e0e0e0;">3.11.9</td></tr>
+        <tr><td style="padding:0.3rem 0; border-bottom:1px solid #e0e0e0;">Framework web</td><td style="padding:0.3rem 0; border-bottom:1px solid #e0e0e0;">Flask 3.1.0</td></tr>
+        <tr><td style="padding:0.3rem 0; border-bottom:1px solid #e0e0e0;">Framework de tests</td><td style="padding:0.3rem 0; border-bottom:1px solid #e0e0e0;">pytest 8.3.4</td></tr>
+        <tr><td style="padding:0.3rem 0;">API user</td><td style="padding:0.3rem 0;">soar-reader · perfil api-readonly</td></tr>
+      </table>
+
+      <strong style="color:#000078; display:block; margin-top:1.5rem;">Configuración de la FortiGate VM</strong>
+      <p style="margin-top:0.4rem;">La imagen se descarga de <strong>support.fortinet.com</strong> → Downloads → VM Images → <strong>FortiGate</strong> (no FortiFirewall) → VMware ESXi → v7.4.11. Se usa el fichero <code>FortiGate-VM64.ovf</code>.</p>
+      <p style="margin-top:0.5rem;">Se importa en VMware Workstation Pro con:</p>
+      <table style="width:100%; margin-top:0.3rem; border-collapse:collapse;">
+        <tr><td style="padding:0.2rem 0; border-bottom:1px solid #e0e0e0;">Memoria</td><td style="padding:0.2rem 0; border-bottom:1px solid #e0e0e0;">2 GB</td></tr>
+        <tr><td style="padding:0.2rem 0; border-bottom:1px solid #e0e0e0;">Procesadores</td><td style="padding:0.2rem 0; border-bottom:1px solid #e0e0e0;">1 (limitación de licencia de evaluación)</td></tr>
+        <tr><td style="padding:0.2rem 0; border-bottom:1px solid #e0e0e0;">Network Adapter 1</td><td style="padding:0.2rem 0; border-bottom:1px solid #e0e0e0;">Host-only (gestión — IP 192.168.75.2)</td></tr>
+        <tr><td style="padding:0.2rem 0;">Network Adapter 2</td><td style="padding:0.2rem 0;">NAT (acceso a Internet para licencia)</td></tr>
+      </table>
+      <p style="margin-top:0.5rem;">Tras arrancar (usuario <code>admin</code>, contraseña vacía), se configura el hostname, la IP de gestión en port1, y se obtiene la licencia de evaluación con <code>execute vm-license</code>. La licencia es permanente y no expira.</p>
+      <p style="margin-top:0.5rem;">Se crea un API user <code>soar-reader</code> con perfil <code>api-readonly</code> (sólo lectura) y trusthost limitado a <code>192.168.75.0/24</code>. El token se genera con <code>execute api-user generate-key soar-reader</code> y se almacena en <code>.env</code> (nunca en el repositorio).</p>
+
+      <strong style="color:#000078; display:block; margin-top:1.5rem;">Clonar y ejecutar</strong>
+      <div style="background:#1e1e1e; color:#d4d4d4; border-radius:6px; padding:0.8rem; margin-top:0.5rem; font-family:monospace; font-size:0.82rem; line-height:1.6;">
+        git clone https://github.com/mapiayg/uoc_tfg_triaje_soar.git<br>
+        cd uoc_tfg_triaje_soar<br>
+        python -m venv venv<br>
+        source venv/Scripts/activate<br>
+        pip install -r requirements.txt<br>
+        cp .env.example .env &nbsp;&nbsp;<span style="color:#6a9955;"># editar con token real</span>
+      </div>
+
+      <strong style="color:#000078; display:block; margin-top:1.5rem;">Verificar el entorno</strong>
+      <div style="background:#1e1e1e; color:#d4d4d4; border-radius:6px; padding:0.8rem; margin-top:0.5rem; font-family:monospace; font-size:0.82rem; line-height:1.6;">
+        python test_api_connection.py &nbsp;&nbsp;<span style="color:#6a9955;"># 3/3 checks</span>
+      </div>
+
+      <strong style="color:#000078; display:block; margin-top:1.5rem;">Ejecutar los tests</strong>
+      <div style="background:#1e1e1e; color:#d4d4d4; border-radius:6px; padding:0.8rem; margin-top:0.5rem; font-family:monospace; font-size:0.82rem; line-height:1.6;">
+        pytest tests/ -v &nbsp;&nbsp;<span style="color:#6a9955;"># 48 passed (con VM)</span><br>
+        pytest tests/ -v &nbsp;&nbsp;<span style="color:#6a9955;"># 24 passed, 24 skipped (sin VM)</span>
+      </div>
+
+      <strong style="color:#000078; display:block; margin-top:1.5rem;">Arrancar el sistema</strong>
+      <div style="background:#1e1e1e; color:#d4d4d4; border-radius:6px; padding:0.8rem; margin-top:0.5rem; font-family:monospace; font-size:0.82rem; line-height:1.6;">
+        python run.py &nbsp;&nbsp;<span style="color:#6a9955;"># listener en http://localhost:5000</span><br>
+        python simulate_webhook.py vpn &nbsp;&nbsp;<span style="color:#6a9955;"># alerta VPN</span><br>
+        python simulate_webhook.py resource &nbsp;&nbsp;<span style="color:#6a9955;"># alerta saturación</span><br>
+        python demo_live.py &nbsp;&nbsp;<span style="color:#6a9955;"># demo completa automatizada</span>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<footer style="text-align:center; padding:1.5rem; color:#999; font-size:0.8rem;">TFG — Triaje SOAR</footer>
+
+</body>
+</html>
