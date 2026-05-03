@@ -100,7 +100,7 @@
   <h2 style="font-size:1.8rem; font-weight:700; margin-bottom:1rem;">Diseño e implementación de un sistema SOAR para la automatización del triaje inicial de incidencias de red</h2>
   <p style="font-size:1rem; margin-bottom:0.3rem;"><strong>Autor:</strong> Miguel Ángel Piay García · mapiayg@uoc.edu</p>
   <p style="font-size:0.9rem; opacity:0.8; margin-bottom:0.3rem;"><strong>Tutor:</strong> David Prior Rodríguez</p>
-  <p style="font-size:0.85rem; opacity:0.6;">Universitat Oberta de Catalunya (UOC) · Administración de Redes y Sistemas Operativos · Abril 2026</p>
+  <p style="font-size:0.85rem; opacity:0.6;">Universitat Oberta de Catalunya (UOC) · Administración de Redes y Sistemas Operativos · Marzo–Junio 2026</p>
   <p style="font-size:0.8rem; opacity:0.5; margin-top:0.5rem;"><a href="https://github.com/mapiayg/uoc_tfg_triaje_soar" target="_blank" style="color:#73edff;">github.com/mapiayg/uoc_tfg_triaje_soar</a></p>
 </header>
 
@@ -110,7 +110,7 @@
   <div class="section">
     <h2>Objetivos y alcance</h2>
     <p>En un SOC (Security Operations Center), cada alerta de red genera un proceso manual: un técnico recibe la notificación, accede al firewall, ejecuta comandos de diagnóstico, evalúa la gravedad y documenta todo en un ticket. Este proceso consume entre <strong>10 y 15 minutos</strong> por incidencia y no aporta valor analítico — es pura fricción operativa.</p>
-    <p style="margin-top:0.8rem;">Este sistema <strong>SOAR</strong> (Security Orchestration, Automation and Response) automatiza ese proceso completo: un webhook llega desde la plataforma de monitorización (WOCU), el sistema consulta el firewall FortiOS por API REST, diagnostica el problema, clasifica la severidad y genera un ticket listo para el técnico — en menos de <strong>100 milisegundos</strong>.</p>
+    <p style="margin-top:0.8rem;">Este sistema <strong>SOAR</strong> (Security Orchestration, Automation and Response) se concibe como <strong>herramienta interna del N1</strong> que se sitúa entre el momento en que el técnico recibe el ticket en su cola de ServiceNow y el momento en que lo cierra. La solución consume los datos del ticket asignado, consulta automáticamente el firewall FortiOS por API REST, compara el umbral declarado con el valor real, emite un veredicto operativo y genera un <strong>ticket enriquecido interno</strong> (JSON + texto plano) que el técnico utiliza como apoyo para cerrar el ticket original — en menos de <strong>100 milisegundos</strong>. La solución <strong>no modifica WOCU ni ServiceNow</strong>: opera en paralelo al flujo corporativo.</p>
     <div style="margin-top:1rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
       <div style="background:#e8faff; border-radius:8px; padding:1rem;">
         <strong style="color:#000078;">Caso de uso 1: Caída VPN</strong><br>
@@ -125,13 +125,13 @@
         Severidad: <span style="color:#c0392b; font-weight:600;">CRITICAL</span> / <span style="color:#f39c12; font-weight:600;">WARNING</span> / <span style="color:#2980b9; font-weight:600;">INFO</span> según umbrales
       </div>
     </div>
-    <p style="margin-top:1rem; font-size:0.9rem; color:#555;">El sistema no ejecuta acciones correctivas — su función es exclusivamente diagnóstica. Entrega al técnico un ticket completado con los datos de diagnóstico, liberando su tiempo para el análisis y la toma de decisiones.</p>
+    <p style="margin-top:1rem; font-size:0.9rem; color:#555;">El sistema no ejecuta acciones correctivas ni toca WOCU o ServiceNow — su función es automatizar las tareas de comprobación que hoy hace el técnico a mano y entregarle un diagnóstico ya interpretado, liberando su tiempo para el análisis y la toma de decisiones.</p>
   </div>
 
   <!-- Stats -->
   <div class="section">
     <div class="stats">
-      <div class="stat"><div class="number">22</div><div class="label">Módulos Python</div></div>
+      <div class="stat"><div class="number">25</div><div class="label">Módulos Python</div></div>
       <div class="stat"><div class="number">48</div><div class="label">Tests</div></div>
       <div class="stat"><div class="number">2</div><div class="label">Casos de uso</div></div>
       <div class="stat"><div class="number">&lt;100ms</div><div class="label">Tiempo de triaje</div></div>
@@ -142,7 +142,7 @@
   <div class="section">
     <h2>Arquitectura del Pipeline</h2>
     <div class="arch-pipeline" id="pipeline">
-      <div class="arch-box" id="arch-wocu">WOCU (alerta)<small>HTTP POST /webhook</small></div>
+      <div class="arch-box" id="arch-wocu">Ticket asignado al N1<small>(WOCU → SNOW, sin tocar)</small></div>
       <div class="arch-arrow">↓</div>
       <div class="arch-box" id="arch-listener">Listener + Idempotencia<small>listener.py · idempotency.py</small></div>
       <div class="arch-arrow">↓</div>
@@ -183,7 +183,7 @@
     <h2>Último Ticket Generado</h2>
     <div class="ticket-display">
       <div>
-        <strong style="color:#569cd6;">JSON (para ServiceNow)</strong>
+        <strong style="color:#569cd6;">JSON (ticket enriquecido interno)</strong>
         <div class="ticket-json" id="ticket-json"></div>
       </div>
       <div>
@@ -201,12 +201,12 @@ let ticketCount = 0;
 
 const moduleDescriptions = {
   'arch-wocu': {
-    title: 'WOCU — Origen de las alertas — simulate_webhook.py · tests/fixtures/',
-    body: `WOCU es la plataforma de monitorización utilizada por Telefónica Tech. Cuando detecta una condición de alerta (túnel VPN caído, CPU al límite), envía un webhook HTTP POST al endpoint <code>/webhook</code> del sistema con un payload JSON que contiene:<ul><li><code>incident_id</code> — identificador único del incidente</li><li><code>alert_type</code> — tipo de alerta (<code>vpn_down</code> o <code>resource_saturation</code>)</li><li><code>device_ip</code>, <code>device_hostname</code>, <code>customer_id</code> — identificación del equipo</li><li>Campos específicos por tipo: <code>vpn_tunnel_name</code> (VPN) o <code>resource_type</code> + <code>threshold_value</code> (saturación)</li></ul>En el laboratorio, los webhooks se simulan con <code>simulate_webhook.py</code> y payloads predefinidos en <code>tests/fixtures/</code>.<br><br><em>Nota: WOCU no forma parte del código del sistema — es el origen externo de las alertas.</em>`
+    title: 'Ticket asignado al N1 — Datos de entrada — simulate_webhook.py · tests/fixtures/',
+    body: `Origen de los datos del incidente que la solución consume. En el flujo corporativo (que la solución <strong>no modifica</strong>): <strong>WOCU → ServiceNow → cola del N1</strong>. WOCU detecta el evento, la integración existente crea el ticket en SNOW y el técnico lo recibe asignado. La solución extrae los datos de la alerta del ticket asignado y los procesa en paralelo, vía un webhook con payload JSON que contiene:<ul><li><code>incident_id</code> — identificador único del incidente</li><li><code>alert_type</code> — tipo de alerta (<code>vpn_down</code> o <code>resource_saturation</code>)</li><li><code>device_ip</code>, <code>device_hostname</code>, <code>customer_id</code> — identificación del equipo afectado</li><li>Campos específicos por tipo: <code>vpn_tunnel_name</code> (VPN) o <code>resource_type</code> + <code>threshold_value</code> (saturación)</li></ul>En el laboratorio, esta entrada se simula con <code>simulate_webhook.py</code> y payloads predefinidos en <code>tests/fixtures/</code>.<br><br><em>La solución no se inserta entre WOCU y ServiceNow: opera al lado, como herramienta interna del N1.</em>`
   },
   'arch-listener': {
     title: 'Listener + Idempotencia — src/listener.py · src/idempotency.py',
-    body: `El listener Flask es el único punto de contacto con el exterior. Expone <code>POST /webhook</code> y <code>GET /health</code>.<br><br>El flujo de cada webhook sigue un orden de coste creciente:<ul><li>Verificación HMAC (opcional, configurable)</li><li>Validación de estructura (parser)</li><li>Deduplicación por <code>incident_id</code></li><li>Enrutado al módulo de diagnóstico</li></ul>Respuestas posibles:<br>• HTTP 202 — webhook procesado correctamente<br>• HTTP 200 — duplicado ignorado<br>• HTTP 400 — error de validación<br><br>La idempotencia usa un diccionario en memoria con TTL de 1 hora y <code>threading.Lock</code> para garantizar atomicidad. Si WOCU reenvía el mismo webhook, el sistema lo descarta en menos de 1ms, antes de ejecutar ninguna consulta API.`
+    body: `El listener Flask es el único punto de contacto con el exterior. Expone <code>POST /webhook</code> y <code>GET /health</code>.<br><br>El flujo de cada webhook sigue un orden de coste creciente:<ul><li>Verificación HMAC (opcional, configurable)</li><li>Validación de estructura (parser)</li><li>Deduplicación por <code>incident_id</code></li><li>Enrutado al módulo de diagnóstico</li></ul>Respuestas posibles:<br>• HTTP 202 — webhook procesado correctamente<br>• HTTP 200 — duplicado ignorado<br>• HTTP 400 — error de validación<br><br>La idempotencia usa un diccionario en memoria con TTL de 1 hora y <code>threading.Lock</code> para garantizar atomicidad. Si el origen reenvía el mismo webhook, el sistema lo descarta en menos de 1ms, antes de ejecutar ninguna consulta API.`
   },
   'arch-parser': {
     title: 'Parser / Validación — src/parser.py',
@@ -218,11 +218,11 @@ const moduleDescriptions = {
   },
   'arch-vpn': {
     title: 'Diagnóstico VPN — src/diagnostics/vpn.py',
-    body: `Automatiza lo que un técnico de N1 haría manualmente ante una caída de VPN.<br><br>Recibe el cliente HTTP (<code>FortinetClient</code>) como parámetro (inyección de dependencias) y ejecuta 3 consultas independientes a la API de FortiOS:<ul><li><code>/monitor/vpn/ipsec</code> — ¿qué ha pasado? (estado del túnel)</li><li><code>/cmdb/vpn.ipsec/phase1-interface</code> — ¿cómo estaba configurado?</li><li><code>/monitor/system/interface</code> — ¿el problema es de red subyacente?</li></ul>Cada consulta está envuelta en su propio <code>try/except</code>: si una falla, las demás continúan y el error queda registrado en el campo <code>errors</code> del resultado.<br><br>El método <code>_analyze()</code> genera un resumen textual a partir de los datos obtenidos.<br>Tiempo típico: 46–62ms para las 3 consultas.`
+    body: `Automatiza lo que un técnico de N1 haría manualmente ante una caída de VPN.<br><br>Recibe el cliente HTTP (<code>FortinetClient</code>) como parámetro (inyección de dependencias) y ejecuta 3 consultas independientes a la API de FortiOS:<ul><li><code>/monitor/vpn/ipsec</code> — ¿qué ha pasado? (estado del túnel)</li><li><code>/cmdb/vpn.ipsec/phase1-interface</code> — ¿cómo estaba configurado?</li><li><code>/monitor/system/interface</code> — ¿el problema es de red subyacente?</li></ul>Cada consulta está envuelta en su propio <code>try/except</code>: si una falla, las demás continúan y el error queda registrado en el campo <code>errors</code> del resultado.<br><br>El método <code>_analyze()</code> emite un <strong>veredicto operativo</strong> (caída confirmada o falso positivo) contrastando el túnel declarado en la alerta con la lista real de túneles activos del firewall.<br>Tiempo típico: 54–86 ms para las 3 consultas.`
   },
   'arch-resource': {
     title: 'Diagnóstico Saturación — src/diagnostics/resources.py',
-    body: `Automatiza el diagnóstico de saturación de CPU/memoria.<br><br>Ejecuta 3 consultas a la API:<ul><li><code>/monitor/system/resource/usage</code> — consumo actual de CPU y memoria</li><li><code>/monitor/firewall/session</code> — sesiones activas (indicador de carga)</li><li><code>/monitor/system/interface</code> — estado de interfaces de red</li></ul>Misma arquitectura que el módulo VPN: inyección de dependencias, tolerancia a fallos parciales, resumen textual con valores reales.<br><br><em>Nota: en la VM de evaluación, el endpoint de sesiones devuelve HTTP 424 (Failed Dependency) — el sistema lo gestiona correctamente y genera el ticket con los datos disponibles.</em>`
+    body: `Automatiza el diagnóstico de saturación de CPU/memoria.<br><br>Ejecuta 3 consultas a la API:<ul><li><code>/monitor/system/resource/usage</code> — consumo actual de CPU y memoria</li><li><code>/monitor/firewall/session</code> — sesiones activas (indicador de carga)</li><li><code>/monitor/system/interface</code> — estado de interfaces de red</li></ul>Misma arquitectura que el módulo VPN: inyección de dependencias, tolerancia a fallos parciales, y <strong>veredicto operativo</strong> que compara el umbral declarado en la alerta con el valor real (CONFIRMADA / DEGRADADA / FALSO POSITIVO). Tiempo típico: 55–73 ms.<br><br><em>Nota: en la VM de evaluación, el endpoint de sesiones devuelve HTTP 424 (Failed Dependency) — el sistema lo gestiona correctamente y genera el ticket con los datos disponibles.</em>`
   },
   'arch-severity': {
     title: 'Clasificador de Severidad — src/severity.py',
@@ -230,7 +230,7 @@ const moduleDescriptions = {
   },
   'arch-output': {
     title: 'Generador de Tickets — src/output.py',
-    body: `Genera dos ficheros por incidente en <code>output/</code>:<ul><li><strong>JSON</strong> — compatible con ServiceNow, incluye <code>incident_id</code>, <code>severity</code>, <code>device</code>, <code>diagnostic_summary</code>, <code>raw_data</code> (respuestas completas de la API), <code>recommended_action</code>, <code>processing_time_ms</code> y <code>errors</code></li><li><strong>TXT</strong> — lectura rápida para el técnico de guardia</li></ul>La acción recomendada se selecciona de un diccionario estático por tipo de alerta.<br><br>Todo el proceso queda registrado en <code>logs/soar.log</code> con formato JSON y el <code>incident_id</code> como correlation ID, lo que permite reconstruir la trazabilidad completa de cualquier incidente.`
+    body: `Genera dos ficheros por incidente en <code>output/</code> que conforman el <strong>ticket enriquecido interno</strong> que consulta el técnico:<ul><li><strong>JSON</strong> — estructura alineada con el esquema de incidencias de ServiceNow (por compatibilidad de formato; la solución no escribe en SNOW). Incluye <code>incident_id</code>, <code>severity</code>, <code>device</code>, <code>diagnostic_summary</code> con el veredicto operativo ya formado, <code>raw_data</code> con las respuestas completas de la API, <code>recommended_action</code>, <code>processing_time_ms</code> y <code>errors</code></li><li><strong>TXT</strong> — lectura rápida para el técnico de guardia</li></ul>La acción recomendada se selecciona de un diccionario estático por tipo de alerta.<br><br>Todo el proceso queda registrado en <code>logs/soar.log</code> con formato JSON y el <code>incident_id</code> como correlation ID, lo que permite reconstruir la trazabilidad completa de cualquier incidente.`
   }
 };
 
