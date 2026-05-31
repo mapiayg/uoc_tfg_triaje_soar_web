@@ -38,7 +38,7 @@
   .btn.dup { border-color: #f39c12; }
   .btn.dup:hover { background: #f39c12; }
 
-  .terminal { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; padding: 1rem; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.5; overflow-x: auto; max-height: 500px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; max-width: 100%; }
+  .terminal { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; padding: 1rem; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.95rem; line-height: 1.55; overflow-x: auto; max-height: 500px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; max-width: 100%; }
   .terminal .prompt { color: #888; }
   .terminal .info { color: #d4d4d4; }
   .terminal .warn { color: #dcdcaa; }
@@ -49,7 +49,7 @@
   .terminal .severity-info { color: #569cd6; font-weight: bold; }
 
   .ticket-display { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
-  .ticket-json, .ticket-txt { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; padding: 1rem; font-family: monospace; font-size: 0.8rem; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+  .ticket-json, .ticket-txt { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; padding: 1rem; font-family: monospace; font-size: 0.9rem; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
   .ticket-json { border-left: 4px solid #569cd6; }
   .ticket-txt { border-left: 4px solid #4ec9b0; }
 
@@ -123,6 +123,29 @@
   .results-summary { background: #e8faff; border-left: 4px solid #000078; padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
   .results-summary strong { color: #000078; }
 
+  .navbar { position: sticky; top: 0; z-index: 100; background: #000078; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem; padding: 0.6rem 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+  .navbar a { color: #fff; text-decoration: none; font-size: 0.85rem; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: 6px; transition: all 0.2s; }
+  .navbar a:hover { background: #73edff; color: #000078; }
+  .section { scroll-margin-top: 4rem; }
+  #portada { display: none; }
+
+  .nav-present { background: #73edff; color: #000078; border: none; font-family: inherit; font-weight: 700; font-size: 0.85rem; padding: 0.35rem 0.9rem; border-radius: 6px; cursor: pointer; }
+  .nav-present:hover { background: #fff; }
+
+  .present-controls { display: none; }
+  body.presentation-mode header,
+  body.presentation-mode .navbar,
+  body.presentation-mode footer { display: none; }
+  body.presentation-mode { background: #000078; }
+  body.presentation-mode .container { width: 92%; max-width: 1100px; padding-top: 1.5rem; padding-bottom: 5rem; }
+  body.presentation-mode .section { display: none; }
+  body.presentation-mode .section.slide-active { display: block !important; }
+  body.presentation-mode .present-controls { display: flex; align-items: center; justify-content: center; gap: 1rem; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.88); padding: 0.7rem; z-index: 200; }
+  .present-controls button { background: #73edff; color: #000078; border: none; font-family: inherit; font-weight: 700; font-size: 1rem; padding: 0.4rem 1.2rem; border-radius: 6px; cursor: pointer; }
+  .present-controls button:hover { background: #fff; }
+  .present-controls .counter { color: #fff; font-weight: 600; font-size: 0.9rem; min-width: 64px; text-align: center; }
+  .present-controls .exit { background: transparent; color: #73edff; border: 1px solid #73edff; }
+
 </style>
 </head>
 <body>
@@ -136,10 +159,48 @@
   <p style="font-size:0.8rem; opacity:0.5; margin-top:0.5rem;"><a href="https://github.com/mapiayg/uoc_tfg_triaje_soar" target="_blank" style="color:#73edff;">github.com/mapiayg/uoc_tfg_triaje_soar</a></p>
 </header>
 
+<nav class="navbar">
+  <a href="#estructura">Estructura</a>
+  <a href="#objetivos">Objetivos</a>
+  <a href="#arquitectura">Arquitectura</a>
+  <a href="#implementacion">Implementación</a>
+  <a href="#resultados">Resultados</a>
+  <a href="#simulacion">Demo</a>
+  <a href="#conclusiones">Conclusiones</a>
+  <button class="nav-present" onclick="enterPresentation()">▶ Modo presentación</button>
+</nav>
+
 <div class="container">
 
+  <!-- Portada (solo en modo presentación) -->
+  <div class="section" id="portada" style="text-align:center;">
+    <h1 style="color:#000078; font-size:1.3rem; font-weight:400; margin-bottom:0.5rem;">Trabajo Fin de Grado</h1>
+    <h2 style="border:none; font-size:1.6rem; color:#000078;">Diseño e implementación de un sistema SOAR para la automatización del triaje inicial de incidencias de red</h2>
+    <p style="margin-top:1.5rem; font-size:1.1rem;"><strong>Miguel Ángel Piay García</strong></p>
+    <p style="color:#666;">Tutor: David Prior Rodríguez</p>
+    <p style="color:#666;">Universitat Oberta de Catalunya (UOC) · Administración de Redes y Sistemas Operativos</p>
+    <p style="color:#888; margin-top:0.5rem;">Junio 2026</p>
+  </div>
+
+  <!-- Índice / estructura -->
+  <div class="section" id="estructura">
+    <h2>Estructura de la presentación</h2>
+    <table class="severity-table">
+      <thead><tr><th>Bloque de la presentación</th><th>En la memoria</th></tr></thead>
+      <tbody>
+        <tr><td>① Problema observado y contexto (N1)</td><td>Cap. 1 · Cap. 4</td></tr>
+        <tr><td>② Solución propuesta y objetivos</td><td>Cap. 2 · Cap. 3</td></tr>
+        <tr><td>③ Arquitectura e implementación (scripts Python)</td><td>Cap. 5</td></tr>
+        <tr><td>④ Demostración en vivo</td><td>Anexo A · Anexo B</td></tr>
+        <tr><td>⑤ Validación: resultados y ventajas</td><td>Cap. 6</td></tr>
+        <tr><td>⑥ Conclusiones</td><td>Cap. 8</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:1rem; font-size:0.95rem; color:#000078;"><strong>▶ Cierre:</strong> demostración <strong>en vivo</strong> del sistema contra el firewall real del laboratorio (git clone, alertas y tests en directo).</p>
+  </div>
+
   <!-- Objetivos y alcance -->
-  <div class="section">
+  <div class="section" id="objetivos">
     <h2>Objetivos y alcance</h2>
     <p>En un SOC (Security Operations Center), cada alerta de red genera un proceso manual: un técnico recibe la notificación, accede al firewall, ejecuta comandos de diagnóstico, evalúa la gravedad y documenta todo en un ticket. Este proceso consume entre <strong>10 y 15 minutos</strong> por incidencia y no aporta valor analítico — es pura fricción operativa.</p>
     <p style="margin-top:0.8rem;">Este sistema <strong>SOAR</strong> (Security Orchestration, Automation and Response) se concibe como <strong>herramienta interna del N1</strong> que se sitúa entre el momento en que el técnico recibe el ticket en su cola de ServiceNow y el momento en que lo cierra. La solución consume los datos del ticket asignado, consulta automáticamente el firewall FortiOS por API REST, compara el umbral declarado con el valor real, emite un veredicto operativo y genera un <strong>ticket enriquecido interno</strong> (JSON + texto plano) que el técnico utiliza como apoyo para cerrar el ticket original — en menos de <strong>100 milisegundos</strong>. La solución <strong>no modifica WOCU ni ServiceNow</strong>: opera en paralelo al flujo corporativo.</p>
@@ -158,6 +219,23 @@
       </div>
     </div>
     <p style="margin-top:1rem; font-size:0.9rem; color:#555;">El sistema no ejecuta acciones correctivas ni toca WOCU o ServiceNow — su función es automatizar las tareas de comprobación que hoy hace el técnico a mano y entregarle un diagnóstico ya interpretado, liberando su tiempo para el análisis y la toma de decisiones.</p>
+
+    <h3 style="color:#000078; margin-top:1.5rem; font-size:1.05rem;">Objetivos específicos (O1–O9)</h3>
+    <table class="severity-table">
+      <thead><tr><th>#</th><th>Objetivo</th><th>Indicador</th></tr></thead>
+      <tbody>
+        <tr><td>O1</td><td>Soporte para 2 tipos de alerta (VPN y saturación)</td><td>Procesar ambos sin intervención</td></tr>
+        <tr><td>O2</td><td>Módulos de diagnóstico diferenciados</td><td>3 consultas API por módulo</td></tr>
+        <tr><td>O3</td><td>Integración con la API REST de Fortinet</td><td>≥90% consultas resueltas</td></tr>
+        <tr><td>O4</td><td>Salida estructurada (JSON + texto plano)</td><td>Todos los campos del esquema</td></tr>
+        <tr><td><strong>O5</strong></td><td>Reducción del tiempo de triaje</td><td><strong>≥80%</strong></td></tr>
+        <tr><td><strong>O6</strong></td><td>Campos automatizados / reducción de errores</td><td><strong>≥85% / ≥50%</strong></td></tr>
+        <tr><td><strong>O7</strong></td><td>Pruebas comparativas en condiciones controladas</td><td><strong>≥10</strong></td></tr>
+        <tr><td><strong>O8</strong></td><td>Acierto del clasificador de severidad</td><td><strong>≥90%</strong></td></tr>
+        <tr><td>O9</td><td>Trazabilidad (logging con correlation ID)</td><td>Log JSON con incident_id</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.85rem; color:#666; margin-top:0.5rem;">Los cuatro objetivos cuantitativos (O5–O8, en negrita) se validan experimentalmente en el capítulo 6.</p>
   </div>
 
   <!-- Stats -->
@@ -171,7 +249,7 @@
   </div>
 
   <!-- Arquitectura -->
-  <div class="section">
+  <div class="section" id="arquitectura">
     <h2>Arquitectura del Pipeline</h2>
     <div class="arch-pipeline" id="pipeline">
       <div class="arch-box" id="arch-wocu">Ticket asignado al N1<small>(WOCU → SNOW, sin tocar)</small></div>
@@ -194,8 +272,30 @@
   </div>
 
 
+  <!-- Implementación: scripts y decisiones -->
+  <div class="section" id="implementacion">
+    <h2>Implementación: scripts Python y decisiones de diseño</h2>
+    <p>El sistema lo componen <strong>25 módulos Python</strong> (más de 2.000 líneas), organizados en cuatro familias según su función:</p>
+    <table class="severity-table">
+      <thead><tr><th>Familia</th><th>Nº</th><th>Para qué sirve</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Pipeline</strong> (núcleo)</td><td>11</td><td>Se ejecutan en cadena al llegar una alerta: listener, parser, idempotency, router, severity, output, logger, client/endpoints, vpn, resources</td></tr>
+        <tr><td>Auxiliares de operación</td><td>5</td><td>Arrancar, simular alertas y demostrar: run, simulate_webhook, test_api_connection, demo_severity, demo_live</td></tr>
+        <tr><td>Scripts de validación</td><td>3</td><td>Instrumentación del cap. 6: generate_trial_alerts, measure_triage_time, calculate_impact</td></tr>
+        <tr><td>Tests</td><td>6</td><td>48 pruebas (unitarias + integración contra la API real)</td></tr>
+      </tbody>
+    </table>
+    <h3 style="color:#000078; margin-top:1.5rem; font-size:1.05rem;">Decisiones de diseño justificadas</h3>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:0.5rem;">
+      <div style="background:#e8faff; border-radius:8px; padding:1rem;"><strong style="color:#000078;">Flask, no FastAPI</strong><br>Procesamiento síncrono; simplicidad suficiente para el alcance.</div>
+      <div style="background:#e8faff; border-radius:8px; padding:1rem;"><strong style="color:#000078;">Reglas deterministas, no ML</strong><br>Auditabilidad: "¿por qué CRITICAL?" siempre tiene respuesta. No hay datos históricos etiquetados.</div>
+      <div style="background:#e8faff; border-radius:8px; padding:1rem;"><strong style="color:#000078;">Idempotencia en memoria</strong><br>Diccionario con TTL 1h + threading.Lock; sin dependencia de Redis en el prototipo.</div>
+      <div style="background:#e8faff; border-radius:8px; padding:1rem;"><strong style="color:#000078;">Retry con backoff exponencial</strong><br>Tolerancia a fallos transitorios de la API (timeouts, HTTP 429).</div>
+    </div>
+  </div>
+
   <!-- Resultados de validación -->
-  <div class="section">
+  <div class="section" id="resultados">
     <h2>Resultados de validación (Capítulo 6)</h2>
     <p>Los datos siguientes son resultados reales obtenidos en el laboratorio durante la fase de validación experimental: 5 trials manuales y 5 automatizados por tipo de incidencia, sobre las mismas alertas variadas y en condiciones controladas.</p>
 
@@ -209,9 +309,9 @@
       </div>
       <div class="result-card met">
         <div class="obj-id">Objetivo O6</div>
-        <div class="obj-title">Reducción de errores de documentación</div>
+        <div class="obj-title">Campos automatizados y reducción de errores</div>
         <div class="obj-result">100%</div>
-        <div class="obj-target">objetivo: ≥50%</div>
+        <div class="obj-target">11/11 campos · 0 errores (obj. ≥85% / ≥50%)</div>
       </div>
       <div class="result-card met">
         <div class="obj-id">Objetivo O7</div>
@@ -309,7 +409,7 @@
   </div>
 
   <!-- Simulación -->
-  <div class="section">
+  <div class="section" id="simulacion">
     <h2>Simulación Interactiva</h2>
     <p>Simula el comportamiento del sistema: envío de alertas, gestión de errores y ejecución de tests.</p>
     <div class="btn-group">
@@ -467,8 +567,9 @@ async function simulate(type) {
     await delay(150);
     log(`  [client] GET /api/v2/monitor/system/interface → 200 OK`, 'success');
     await delay(200);
-    log(`  [vpn] Túnel VPN-SEDE-CENTRAL-MADRID NO encontrado en lista de túneles activos`, 'warn');
-    log(`  [vpn] Diagnóstico completado en 62ms. Errores: 0`, 'info');
+    log(`  [vpn] Túnel VPN-SEDE-CENTRAL-MADRID NO aparece entre los túneles IPSec activos`, 'warn');
+    log(`  [vpn] Veredicto: caída CONFIRMADA — sin gateways IKE; interfaces port1/port2 operativas`, 'warn');
+    log(`  [vpn] Diagnóstico completado en 69ms. Errores: 0`, 'info');
     await delay(150);
     log(`\n  [severity] vpn_down → CRITICAL (caída de VPN siempre es crítica)`, 'severity-critical');
     await delay(150);
@@ -511,14 +612,15 @@ async function simulate(type) {
     await delay(200);
     log(`\n  [resource] Iniciando diagnóstico de saturación: cpu al 95.5%`, 'info');
     log(`  [client] GET /api/v2/monitor/system/resource/usage → 200 OK`, 'success');
-    log(`  [resource] CPU actual: 1% | Memoria actual: 37%`, 'info');
+    log(`  [resource] CPU actual: 4% | Memoria actual: 38%`, 'info');
     await delay(150);
     log(`  [client] GET /api/v2/monitor/firewall/session → 424 Failed Dependency`, 'error');
     log(`  [resource] Error capturado — continuando con las demás consultas`, 'warn');
     await delay(150);
     log(`  [client] GET /api/v2/monitor/system/interface → 200 OK`, 'success');
     await delay(200);
-    log(`  [resource] Diagnóstico completado en 46ms. Errores: 1`, 'info');
+    log(`  [resource] Veredicto: probable FALSO POSITIVO — CPU al 4%, muy por debajo del umbral declarado (95.5%)`, 'warn');
+    log(`  [resource] Diagnóstico completado en 63ms. Errores: 1`, 'info');
     await delay(150);
     log(`\n  [severity] resource_saturation cpu 95.5% (≥90%) → CRITICAL`, 'severity-critical');
     await delay(150);
@@ -584,9 +686,9 @@ function showTicket(type, iid, ts) {
     document.getElementById('ticket-json').textContent = JSON.stringify({
       incident_id: iid, timestamp: ts, alert_type: "vpn_down", severity: "critical",
       device: { hostname: "FW-CLIENTE-A-01", ip: "10.10.1.1", customer_id: "CLIENTE-A" },
-      diagnostic_summary: "Túnel VPN-SEDE-CENTRAL-MADRID NO encontrado en lista de túneles activos. El túnel ha caído completamente.",
-      recommended_action: "Verificar conectividad con peer remoto. Revisar logs IKE en ambos extremos.",
-      processing_time_ms: 62, errors: []
+      diagnostic_summary: "Caída de VPN-SEDE-CENTRAL-MADRID CONFIRMADA: el túnel no aparece en la lista de túneles IPSec activos del firewall y no hay gateways IKE para él. Interfaces del firewall operativas: port1, port2. Causa probable: fallo en el peer remoto o en la negociación IKE.",
+      recommended_action: "Verificar conectividad con peer remoto. Revisar logs IKE en ambos extremos. Contactar a cliente para confirmar incidencia y coordinar restablecimiento del túnel.",
+      processing_time_ms: 69, errors: []
     }, null, 2);
     document.getElementById('ticket-txt').textContent =
 `============================================================
@@ -600,22 +702,26 @@ Dispositivo: FW-CLIENTE-A-01 (10.10.1.1)
 Cliente:     CLIENTE-A
 ------------------------------------------------------------
 DIAGNÓSTICO:
-Túnel VPN-SEDE-CENTRAL-MADRID NO encontrado en lista
-de túneles activos. El túnel ha caído completamente.
+Caída de VPN-SEDE-CENTRAL-MADRID CONFIRMADA: el túnel no
+aparece en la lista de túneles IPSec activos del firewall
+y no hay gateways IKE para él. Interfaces del firewall
+operativas: port1, port2. Causa probable: fallo en el peer
+remoto o en la negociación IKE.
 ------------------------------------------------------------
 ACCIÓN RECOMENDADA:
-Verificar conectividad con peer remoto. Revisar logs
-IKE en ambos extremos.
+Verificar conectividad con peer remoto. Revisar logs IKE
+en ambos extremos. Contactar a cliente para confirmar
+incidencia y coordinar restablecimiento del túnel.
 ------------------------------------------------------------
-Tiempo de procesado: 62 ms
+Tiempo de procesado: 69 ms
 ============================================================`;
   } else {
     document.getElementById('ticket-json').textContent = JSON.stringify({
       incident_id: iid, timestamp: ts, alert_type: "resource_saturation", severity: "critical",
       device: { hostname: "FW-CLIENTE-B-01", ip: "10.10.2.1", customer_id: "CLIENTE-B" },
-      diagnostic_summary: "CPU actual: 1% | Memoria actual: 37% | Alerta original: cpu al 95.5%.",
-      recommended_action: "Monitorizar tendencia de consumo. Identificar procesos o tráfico anómalo.",
-      processing_time_ms: 46, errors: ["session_count: 424 Client Error: Failed Dependency"]
+      diagnostic_summary: "Probable FALSO POSITIVO o pico ya resuelto: CPU al 4%, muy por debajo del umbral declarado en la alerta (95.5%). Contexto del firewall: memoria al 38%.",
+      recommended_action: "Monitorizar tendencia de consumo. Identificar procesos o tráfico anómalo. Si CPU >95% sostenido, evaluar reinicio de proceso o escalado.",
+      processing_time_ms: 63, errors: ["session_count: 424 Client Error: Failed Dependency for url: https://192.168.75.2/api/v2/monitor/firewall/session"]
     }, null, 2);
     document.getElementById('ticket-txt').textContent =
 `============================================================
@@ -629,17 +735,19 @@ Dispositivo: FW-CLIENTE-B-01 (10.10.2.1)
 Cliente:     CLIENTE-B
 ------------------------------------------------------------
 DIAGNÓSTICO:
-CPU actual: 1% | Memoria actual: 37%
-Alerta original: cpu al 95.5%.
+Probable FALSO POSITIVO o pico ya resuelto: CPU al 4%,
+muy por debajo del umbral declarado en la alerta (95.5%).
+Contexto del firewall: memoria al 38%.
 ------------------------------------------------------------
 ACCIÓN RECOMENDADA:
 Monitorizar tendencia de consumo. Identificar procesos
-o tráfico anómalo.
+o tráfico anómalo. Si CPU >95% sostenido, evaluar
+reinicio de proceso o escalado.
 ------------------------------------------------------------
 ERRORES:
   - session_count: 424 Failed Dependency
 ------------------------------------------------------------
-Tiempo de procesado: 46 ms
+Tiempo de procesado: 63 ms
 ============================================================`;
   }
 }
@@ -766,7 +874,7 @@ async function runTests(mode) {
 </script>
 
   <!-- Detalles técnicos -->
-  <div class="section">
+  <div class="section" id="tecnico">
     <h2>Detalles técnicos y puesta en marcha</h2>
     <div style="font-size:0.9rem;">
 
@@ -824,9 +932,69 @@ async function runTests(mode) {
     </div>
   </div>
 
+  <!-- Conclusiones -->
+  <div class="section" id="conclusiones">
+    <h2>Conclusiones</h2>
+    <div class="results-summary">
+      <strong>Los 9 objetivos del TFG se cumplen</strong>, y los 4 cuantitativos (O5–O8) se superan con amplio margen: reducción del tiempo de triaje del <strong>99,99%</strong>, <strong>100%</strong> de campos automatizados, <strong>0 errores</strong> de documentación y <strong>100%</strong> de acierto del clasificador.
+    </div>
+    <h3 style="color:#000078; margin-top:1.2rem; font-size:1.05rem;">Lecciones aprendidas</h3>
+    <ul style="margin:0.5rem 0 0.5rem 1.5rem; line-height:1.8;">
+      <li><strong>El diseño desacoplado tiene un retorno tangible:</strong> incorporar el segundo caso de uso fue cuestión de un módulo y una línea en el router.</li>
+      <li><strong>Validar contra el sistema real cambia el resultado:</strong> detectó incompatibilidades del firmware (HTTP 424, rate limiting) que un mock habría ocultado.</li>
+      <li><strong>Definir indicadores numéricos desde el inicio</strong> convirtió la validación en una verificación objetiva, no en una redacción libre.</li>
+    </ul>
+    <h3 style="color:#000078; margin-top:1.2rem; font-size:1.05rem;">Trabajo futuro</h3>
+    <p style="font-size:0.9rem;">Disparo automatizado desde el ticket asignado · nuevos tipos de incidencia · encapsulación de playbooks (MCP) · preparación para producción (vault, observabilidad, persistencia de la idempotencia).</p>
+    <div style="margin-top:1.5rem; text-align:center; font-size:0.95rem;">
+      <strong style="color:#000078;">Gracias por su atención</strong><br>
+      <a href="https://github.com/mapiayg/uoc_tfg_triaje_soar" target="_blank" style="color:#000078;">Repositorio</a> ·
+      <a href="https://mapiayg.github.io/uoc_tfg_triaje_soar_web/" target="_blank" style="color:#000078;">Presentación web</a>
+    </div>
+  </div>
+
 </div>
 
 <footer style="text-align:center; padding:1.5rem; color:#999; font-size:0.8rem;">TFG — Triaje SOAR</footer>
+
+<div class="present-controls">
+  <button onclick="prevSlide()">← Anterior</button>
+  <span class="counter" id="slide-counter">1 / 5</span>
+  <button onclick="nextSlide()">Siguiente →</button>
+  <button class="exit" onclick="exitPresentation()">Salir (Esc)</button>
+</div>
+
+<script>
+(function(){
+  const slideIds = ['portada', 'estructura', 'objetivos', 'arquitectura', 'implementacion', 'tecnico', 'simulacion', 'resultados', 'conclusiones'];
+  let slideIndex = 0;
+  function showSlide(i){
+    slideIndex = (i + slideIds.length) % slideIds.length;
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('slide-active'));
+    const el = document.getElementById(slideIds[slideIndex]);
+    if (el) el.classList.add('slide-active');
+    // En la diapositiva de la demo, mostrar también el ticket generado
+    const ticket = document.getElementById('ticket-section');
+    if (ticket && slideIds[slideIndex] === 'simulacion') ticket.classList.add('slide-active');
+    const c = document.getElementById('slide-counter');
+    if (c) c.textContent = (slideIndex + 1) + ' / ' + slideIds.length;
+    window.scrollTo(0, 0);
+  }
+  window.enterPresentation = function(){ document.body.classList.add('presentation-mode'); showSlide(0); };
+  window.exitPresentation = function(){
+    document.body.classList.remove('presentation-mode');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('slide-active'));
+  };
+  window.nextSlide = function(){ showSlide(slideIndex + 1); };
+  window.prevSlide = function(){ showSlide(slideIndex - 1); };
+  document.addEventListener('keydown', function(e){
+    if (!document.body.classList.contains('presentation-mode')) return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevSlide(); }
+    else if (e.key === 'Escape') { exitPresentation(); }
+  });
+})();
+</script>
 
 </body>
 </html>
