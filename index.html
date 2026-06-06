@@ -127,24 +127,6 @@
   .navbar a { color: #fff; text-decoration: none; font-size: 0.85rem; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: 6px; transition: all 0.2s; }
   .navbar a:hover { background: #73edff; color: #000078; }
   .section { scroll-margin-top: 4rem; }
-  #portada { display: none; }
-
-  .nav-present { background: #73edff; color: #000078; border: none; font-family: inherit; font-weight: 700; font-size: 0.85rem; padding: 0.35rem 0.9rem; border-radius: 6px; cursor: pointer; }
-  .nav-present:hover { background: #fff; }
-
-  .present-controls { display: none; }
-  body.presentation-mode header,
-  body.presentation-mode .navbar,
-  body.presentation-mode footer { display: none; }
-  body.presentation-mode { background: #000078; }
-  body.presentation-mode .container { width: 92%; max-width: 1100px; padding-top: 1.5rem; padding-bottom: 5rem; }
-  body.presentation-mode .section { display: none !important; }
-  body.presentation-mode .section.slide-active { display: block !important; }
-  body.presentation-mode .present-controls { display: flex; align-items: center; justify-content: center; gap: 1rem; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.88); padding: 0.7rem; z-index: 200; }
-  .present-controls button { background: #73edff; color: #000078; border: none; font-family: inherit; font-weight: 700; font-size: 1rem; padding: 0.4rem 1.2rem; border-radius: 6px; cursor: pointer; }
-  .present-controls button:hover { background: #fff; }
-  .present-controls .counter { color: #fff; font-weight: 600; font-size: 0.9rem; min-width: 64px; text-align: center; }
-  .present-controls .exit { background: transparent; color: #73edff; border: 1px solid #73edff; }
 
 </style>
 </head>
@@ -160,44 +142,15 @@
 </header>
 
 <nav class="navbar">
-  <a href="#estructura">Estructura</a>
   <a href="#objetivos">Objetivos</a>
   <a href="#arquitectura">Arquitectura</a>
   <a href="#implementacion">Implementación</a>
   <a href="#resultados">Resultados</a>
   <a href="#simulacion">Demo</a>
   <a href="#conclusiones">Conclusiones</a>
-  <button class="nav-present" onclick="enterPresentation()">▶ Modo presentación</button>
 </nav>
 
 <div class="container">
-
-  <!-- Portada (solo en modo presentación) -->
-  <div class="section" id="portada" style="text-align:center;">
-    <h1 style="color:#000078; font-size:1.3rem; font-weight:400; margin-bottom:0.5rem;">Trabajo Fin de Grado</h1>
-    <h2 style="border:none; font-size:1.6rem; color:#000078;">Diseño e implementación de un sistema SOAR para la automatización del triaje inicial de incidencias de red</h2>
-    <p style="margin-top:1.5rem; font-size:1.1rem;"><strong>Miguel Ángel Piay García</strong></p>
-    <p style="color:#666;">Tutor: David Prior Rodríguez</p>
-    <p style="color:#666;">Universitat Oberta de Catalunya (UOC) · Administración de Redes y Sistemas Operativos</p>
-    <p style="color:#888; margin-top:0.5rem;">Junio 2026</p>
-  </div>
-
-  <!-- Índice / estructura -->
-  <div class="section" id="estructura">
-    <h2>Estructura de la presentación</h2>
-    <table class="severity-table">
-      <thead><tr><th>Bloque de la presentación</th><th>En la memoria</th></tr></thead>
-      <tbody>
-        <tr><td>① Problema observado y contexto (N1)</td><td>Cap. 1 · Cap. 4</td></tr>
-        <tr><td>② Solución propuesta y objetivos</td><td>Cap. 2 · Cap. 3</td></tr>
-        <tr><td>③ Arquitectura e implementación (scripts Python)</td><td>Cap. 5</td></tr>
-        <tr><td>④ Demostración en vivo</td><td>Anexo A · Anexo B</td></tr>
-        <tr><td>⑤ Validación: resultados y ventajas</td><td>Cap. 6</td></tr>
-        <tr><td>⑥ Conclusiones</td><td>Cap. 8</td></tr>
-      </tbody>
-    </table>
-    <p style="margin-top:1rem; font-size:0.95rem; color:#000078;"><strong>▶ Cierre:</strong> demostración <strong>en vivo</strong> del sistema contra el firewall real del laboratorio (git clone, alertas y tests en directo).</p>
-  </div>
 
   <!-- Objetivos y alcance -->
   <div class="section" id="objetivos">
@@ -956,45 +909,6 @@ async function runTests(mode) {
 </div>
 
 <footer style="text-align:center; padding:1.5rem; color:#999; font-size:0.8rem;">TFG — Triaje SOAR</footer>
-
-<div class="present-controls">
-  <button onclick="prevSlide()">← Anterior</button>
-  <span class="counter" id="slide-counter">1 / 5</span>
-  <button onclick="nextSlide()">Siguiente →</button>
-  <button class="exit" onclick="exitPresentation()">Salir (Esc)</button>
-</div>
-
-<script>
-(function(){
-  const slideIds = ['portada', 'estructura', 'objetivos', 'arquitectura', 'implementacion', 'tecnico', 'simulacion', 'resultados', 'conclusiones'];
-  let slideIndex = 0;
-  function showSlide(i){
-    slideIndex = (i + slideIds.length) % slideIds.length;
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('slide-active'));
-    const el = document.getElementById(slideIds[slideIndex]);
-    if (el) el.classList.add('slide-active');
-    // En la diapositiva de la demo, mostrar también el ticket generado
-    const ticket = document.getElementById('ticket-section');
-    if (ticket && slideIds[slideIndex] === 'simulacion') ticket.classList.add('slide-active');
-    const c = document.getElementById('slide-counter');
-    if (c) c.textContent = (slideIndex + 1) + ' / ' + slideIds.length;
-    window.scrollTo(0, 0);
-  }
-  window.enterPresentation = function(){ document.body.classList.add('presentation-mode'); showSlide(0); };
-  window.exitPresentation = function(){
-    document.body.classList.remove('presentation-mode');
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('slide-active'));
-  };
-  window.nextSlide = function(){ showSlide(slideIndex + 1); };
-  window.prevSlide = function(){ showSlide(slideIndex - 1); };
-  document.addEventListener('keydown', function(e){
-    if (!document.body.classList.contains('presentation-mode')) return;
-    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); nextSlide(); }
-    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevSlide(); }
-    else if (e.key === 'Escape') { exitPresentation(); }
-  });
-})();
-</script>
 
 </body>
 </html>
